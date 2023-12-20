@@ -1,0 +1,120 @@
+#include <iostream>
+#include <vector>
+#include <cstdlib>
+#include <ctime>
+
+using namespace std;
+
+// User Data Structure
+struct UserData {
+    string phoneNum;
+    double availableAmount;
+    vector<string> transactions;
+};
+
+// Transaction Structure
+struct Transaction {
+    string from;
+    string to;
+    double amount;
+};
+
+// Google Pay Clone Class
+class GooglePayClone {
+private:
+    vector<UserData> users;
+
+public:
+    // Log In Function
+    UserData& login(string phoneNum) {
+        auto it = find_if(users.begin(), users.end(), [phoneNum](const UserData& user) {
+            return user.phoneNum == phoneNum;
+        });
+
+        if (it == users.end()) {
+            double initialAmount;
+            cout << "Welcome! Enter initial amount for your wallet: ";
+            cin >> initialAmount;
+
+            users.push_back({phoneNum, initialAmount});
+            return users.back();
+        }
+
+        return *it;
+    }
+
+    // Transfer Amount Function
+    bool transferAmount(UserData& sender, UserData& recipient, double amount) {
+        if (sender.availableAmount >= amount) {
+            sender.availableAmount -= amount;
+            recipient.availableAmount += amount;
+
+            // Update transactions
+            sender.transactions.push_back("To: " + recipient.phoneNum + ", Amount: " + to_string(amount));
+            recipient.transactions.push_back("From: " + sender.phoneNum + ", Amount: " + to_string(amount));
+
+            return true;
+        } else {
+            cout << "Insufficient balance." << endl;
+            return false;
+        }
+    }
+
+    // Cashback Handling Function
+    void cashbackHandling(double amount) {
+        if (amount % 500 == 0) {
+            // Randomly give a coupon or notify the user of better luck next time
+            if (rand() % 2 == 0) {
+                cout << "Congratulations! You've won a coupon!" << endl;
+            } else {
+                cout << "Better luck next time! No cashback for multiples of 500." << endl;
+            }
+        } else {
+            // Cashback based on transaction amount
+            double cashbackPercentage = (amount < 1000) ? 5 : 2;
+            double cashbackAmount = (cashbackPercentage / 100) * amount;
+
+            cout << "Congratulations! You've got " << cashbackPercentage << "% cashback: " << cashbackAmount << endl;
+        }
+    }
+
+    // Display Information Function
+    void displayInformation(UserData& user) {
+        cout << "Transaction successful! Available amount: " << user.availableAmount << endl;
+        cashbackHandling(stod(user.transactions.back().substr(user.transactions.back().find("Amount: ") + 8)));
+    }
+
+    // Display Transaction List Function
+    void displayTransactionList(UserData& user) {
+        cout << "Transaction list for " << user.phoneNum << ":" << endl;
+        for (const auto& transaction : user.transactions) {
+            cout << transaction << endl;
+        }
+    }
+};
+
+int main() {
+    srand(time(0)); // Initialize random seed
+
+    GooglePayClone googlePay;
+
+    // Example usage
+    UserData& user1 = googlePay.login("1234567890");
+    UserData& user2 = googlePay.login("9876543210");
+
+    double amountToTransfer;
+    cout << "Enter amount to transfer: ";
+    cin >> amountToTransfer;
+
+    string recipientPhoneNum;
+    cout << "Enter recipient's phone number: ";
+    cin >> recipientPhoneNum;
+
+    if (googlePay.transferAmount(user1, user2, amountToTransfer)) {
+        googlePay.displayInformation(user1);
+        googlePay.displayTransactionList(user1);
+        googlePay.displayTransactionList(user2);
+    }
+
+    return 0;
+}
